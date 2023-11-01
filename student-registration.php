@@ -3,16 +3,32 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $studentName = $_POST["studentName"];
     $studentEmail = $_POST["studentEmail"];
     $studentPassword = $_POST["studentPassword"];
-    $studentMajor = $_POST["studentMajor"];
+    // Hash the password for security.
+    $hashedPassword = password_hash($studentPassword, PASSWORD_DEFAULT);
 
-    // Validate and store the data as needed (e.g., in a database).
-    // You should add proper validation and database connection here.
+    // Create a database connection (replace with your actual database credentials).
+    $dsn = "mysql:host=localhost;dbname=mydbstudent";
+    $username = "your_db_username";
+    $password = "your_db_password";
 
-    // Example: Storing in a text file (not recommended for production):
-    $data = "Name: $studentName\nEmail: $studentEmail\nMajor: $studentMajor\n";
-    file_put_contents("students.txt", $data, FILE_APPEND);
+    try {
+        $db = new PDO($dsn, $username, $password);
 
-    // Redirect to a success page or perform other actions as needed.
-    header("Location: studentdash.html");
+        // Insert user data into the users table.
+        $sql = "INSERT INTO users (name, email, password) VALUES (:name, :email, :password)";
+        $stmt = $db->prepare($sql);
+        $stmt->execute([
+            ':name' => $studentName,
+            ':email' => $studentEmail,
+            ':password' => $hashedPassword,
+        ]);
+
+        // Redirect to a success page or perform other actions as needed.
+        header("Location: studentdash.html");
+        exit;
+    } catch (PDOException $e) {
+        echo "Database error: " . $e->getMessage();
+    }
 }
 ?>
+
